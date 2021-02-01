@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
 
 import 'colors.dart';
 import 'home.dart';
@@ -47,25 +48,10 @@ class MailPreviewCard extends StatelessWidget {
         'Starred';
 
     // TODO: Add Container Transform transition from email list to email detail page (Motion)
-    return Material(
-      color: theme.cardColor,
-      child: InkWell(
-        onTap: () {
-          Provider.of<EmailStore>(
-            context,
-            listen: false,
-          ).currentlySelectedEmailId = id;
-
-          mobileMailNavKey.currentState.push(
-            PageRouteBuilder(
-              pageBuilder: (BuildContext context, Animation<double> animation,
-                  Animation<double> secondaryAnimation) {
-                return MailViewPage(id: id, email: email);
-              },
-            ),
-          );
-        },
-        child: Dismissible(
+    return _OpenContainerWrapper(
+      id: id,
+      email: email,
+      closedChild: Dismissible(
           key: ObjectKey(email),
           dismissThresholds: const {
             DismissDirection.startToEnd: 0.8,
@@ -115,13 +101,54 @@ class MailPreviewCard extends StatelessWidget {
           ),
           child: mailPreview,
         ),
-      ),
-    );
+      );
   }
 }
 
 // TODO: Add Container Transform transition from email list to email detail page (Motion)
+class _OpenContainerWrapper extends
+    StatelessWidget {
+  const _OpenContainerWrapper({
+    @required this.id,
+    @required this.email,
+    @required this.closedChild,
+  }) : assert(id != null),
+       assert(email != null),
+       assert(closedChild != null);
 
+  final int id;
+  final Email email;
+  final Widget closedChild;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return OpenContainer(
+      openBuilder: (context, closedContainer) {
+         return MailViewPage(id: id, email: email);
+      },
+      openColor: theme.cardColor,
+      closedShape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(0)),
+      ),
+      closedElevation: 0,
+      closedColor: theme.cardColor,
+      closedBuilder: (context, openContainer) {
+        return InkWell(
+          onTap: () {
+            Provider.of<EmailStore>(
+              context,
+              listen: false,
+            ).currentlySelectedEmailId = id;
+            openContainer();
+          },
+          child: closedChild,
+        );
+      },
+    );
+  }
+}
 class _DismissibleContainer extends StatelessWidget {
   const _DismissibleContainer({
     @required this.icon,
