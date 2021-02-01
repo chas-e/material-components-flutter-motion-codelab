@@ -743,6 +743,7 @@ class _ReplyFab extends StatefulWidget {
 class _ReplyFabState extends State<_ReplyFab>
     with SingleTickerProviderStateMixin {
   // TODO: Add Fade through transition between compose and reply FAB (Motion)
+  static final fabKey = UniqueKey();
   static const double _mobileFabDimension = 56;
 
   @override
@@ -754,14 +755,18 @@ class _ReplyFabState extends State<_ReplyFab>
         selector: (context, emailStore) => emailStore.onMailView,
         builder: (context, onMailView, child) {
           // TODO: Add Fade through transition between compose and reply FAB (Motion)
-          final fabSwitcher = onMailView
+          final fabSwitcher = _FadeThroughTransitionSwitcher(
+              fillColor: Colors.transparent,
+              child: onMailView
               ? Icon(
             Icons.reply_all,
+            key: fabKey,
             color: Colors.black,
           )
               : const Icon(
             Icons.create,
             color: Colors.black,
+              ),
           );
           final tooltip = onMailView ? 'Reply' : 'Compose';
 
@@ -811,3 +816,29 @@ class _ReplyFabState extends State<_ReplyFab>
   }
 }
 // TODO: Add Fade through transition between compose and reply FAB (Motion)
+
+class _FadeThroughTransitionSwitcher extends StatelessWidget {
+  const _FadeThroughTransitionSwitcher({
+    @required this.fillColor,
+    @required this.child,
+}) : assert(fillColor != null),
+     assert(child != null);
+
+  final Widget child;
+  final Color fillColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return PageTransitionSwitcher(
+        transitionBuilder: (child, animation, secondaryAnimation) {
+          return FadeThroughTransition(
+              fillColor: fillColor,
+              child: child,
+              animation: animation,
+              secondaryAnimation: secondaryAnimation,
+          );
+        },
+      child: child,
+    );
+  }
+}
